@@ -1,0 +1,11 @@
+django-help
+===========
+
+Django-help is a little `django`_ app that provides 
+objects which you can use as an help pages in your project.
+
+
+
+.. django http://djangoproject.com 
+
+ 
