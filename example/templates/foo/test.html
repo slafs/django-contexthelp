@@ -1,5 +1,47 @@
 {% load help_tags %}
 
-{% help_link %}
-
 {{ test }}
+
+<hr />
+
+<p>below should be the help link</p>
+<a href="{% get_help_link %}">Get help!</a>
+
+<hr />
+
+{% get_help_link as var_help_link %}
+<p>below should be the help link</p>
+{% if var_help_link %}
+	<a href="{{ var_help_link }}">Get help!</a>
+{% endif %}
+<hr />
+
+{% get_help_link "test_view" as var_help_link2 %}
+<p>below should be the help link 2</p>
+{% if var_help_link2 %}
+	<a href="{{ var_help_link2 }}">Get help!</a>
+{% endif %}
+<hr />
+
+{% get_help_link "test_view" "foo.views" as var_help_link3 %}
+<p>below should be the help link 3</p>
+{% if var_help_link3 %}
+	<a href="{{ var_help_link3 }}">Get help!</a>
+{% endif %}
+<hr />
+
+{% get_help_link "test_view" "foo.views" "foo" as var_help_link4 %}
+<p>below should be the help link 4</p>
+{% if var_help_link4 %}
+	<a href="{{ var_help_link4 }}">Get help!</a>
+{% endif %}
+<hr />
+
+{% with "test_view" as tv %}
+	{% get_help_link tv "foo.views" as var_help_link5 %}
+	<p>below should be the help link 5</p>
+	{% if var_help_link5 %}
+		<a href="{{ var_help_link5 }}">Get help!</a>
+	{% endif %}
+	<hr />
+{% endwith %}

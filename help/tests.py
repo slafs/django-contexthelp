@@ -11,12 +11,11 @@ from django.core.urlresolvers import reverse
 from help.models import Help
 from help.utils import unslugify
 
-
 class SimpleTest(TestCase):
     
     def test_unslug(self):
         slug = "some-weird-slug-2"
-        shouldbe = "Some weird slug 2"
+        shouldbe = "Some Weird Slug 2"
         
         unslug = unslugify(slug)
         self.failUnlessEqual(unslug, shouldbe)
@@ -27,34 +26,34 @@ class SimpleTest(TestCase):
         and test the views
         """
         testslug = "some-weird-slug"
-        testapp = "help"
-        shouldbe_title = "Some weird slug"
+        testmodule = "help-views"
         
-        h = Help.objects.create_default(slug=testslug, app_label=testapp)
+        h = Help.objects.create_default(slug=testslug, module_label=testmodule)
+        shouldbe_title = "Help Views Some Weird Slug"
         self.failUnlessEqual(shouldbe_title, h.title)
         
-        help_url = reverse("show_help_for_app", args=[testslug, testapp])
+        help_url = reverse("show_help_for_slug_and_module", args=[testslug, testmodule])
         r = self.client.get(help_url, {})
         self.assertEqual(r.status_code, 200)
 
-        #there shouldn't be any entry with testslug and without testapp
-        help_url = reverse("show_help", args=[testslug])
+        help_url = reverse("show_help_for_slug", args=[testslug])
         r = self.client.get(help_url, {})
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 200)
         
-        testslug = "some-another-weird-slug"
+        testslug = "some another weird slug"
+        testmodule = "help views"
         testapp = "help_2"
-        shouldbe_title = "Some another weird slug"
         
-        h = Help.objects.create_default(slug=testslug)
+        h = Help.objects.create_default(slug=testslug, module_label=testmodule, app_label=testapp)
+
+        shouldbe_title = "Help 2 Help Views Some Another Weird Slug"
         self.failUnlessEqual(shouldbe_title, h.title)
         
-        #there shouldn't be any entry with testslug and with testapp
-        help_url = reverse("show_help_for_app", args=[testslug, testapp])
+        help_url = reverse("show_help_for_slug_module_and_app", args=['some-another-weird-slug', 'help-views', 'help2'])
         r = self.client.get(help_url, {})
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 200)
 
-        help_url = reverse("show_help", args=[testslug])
+        help_url = reverse("show_help_for_slug", args=['some-another-weird-slug'])
         r = self.client.get(help_url, {})
         self.assertEqual(r.status_code, 200)
         

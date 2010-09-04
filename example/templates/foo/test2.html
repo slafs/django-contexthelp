@@ -1,3 +1,13 @@
+{% load help_tags %}
+
+Below should appear help for view "test_view2".
+{% render_help %}
+
 {% for e in test_list %}
 	- {{ e }} <br />
+	
 {% endfor %}
+
+Below should appear forced help for another view "test_view"
+
+{% render_help "test_view" "foo.views" %}
