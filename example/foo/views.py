@@ -13,3 +13,9 @@ def test_view2(request, argument):
 
     return direct_to_template(request, "foo/test2.html", 
                               { 'test_list' : qs })
+
+def weird(request):
+    ''' wieeeerd '''
+
+    return direct_to_template(request, "foo/weird.html", {})
+    

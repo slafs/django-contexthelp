@@ -42,9 +42,9 @@ class SimpleTest(TestCase):
         
         testslug = "some another weird slug"
         testmodule = "help views"
-        testapp = "help_2"
+        testname = "help_2"
         
-        h = Help.objects.create_default(slug=testslug, module_label=testmodule, app_label=testapp)
+        h = Help.objects.create_default(slug=testslug, module_label=testmodule, url_name=testname)
 
         shouldbe_title = "Help 2 Help Views Some Another Weird Slug"
         self.failUnlessEqual(shouldbe_title, h.title)

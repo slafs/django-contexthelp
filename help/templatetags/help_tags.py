@@ -1,18 +1,16 @@
 from django import template
-from django.core.exceptions import ImproperlyConfigured
 
 from help.models import Help 
 from help.utils import get_path_from_context, slug_those
-from django.template.defaultfilters import slugify
 
 register = template.Library()
 
 class BaseHelpNode(template.Node):
     
-    def __init__(self, slug=None, module_label=None, app_label=None, as_var=None):
+    def __init__(self, slug=None, module_label=None, url_name=None, as_var=None):
         self.slug = slug
         self.module_label = module_label
-        self.app_label = app_label
+        self.url_name = url_name
         self.as_var = as_var
         
     def handle_token(cls, parser, token):
@@ -21,7 +19,7 @@ class BaseHelpNode(template.Node):
         tl = len(orig_tokens) 
         if tl == 1:
             return cls(None, None, None, None)
-        if tl > 2:
+        elif tl > 2:
             if orig_tokens[-2] != 'as':
                 raise template.TemplateSyntaxError("Second argument from the end in %r must be 'as'" 
                                                    % orig_tokens[0])
@@ -52,11 +50,11 @@ class BaseHelpNode(template.Node):
 
     handle_token = classmethod(handle_token)
 
-    def obtain_help_link(self, context, slug=None, module_label=None, app_label=None):
+    def obtain_help_link(self, context, slug=None, module_label=None, url_name=None):
         raise NotImplementedError
     
     def render(self, context):
-        to_resolve = [self.slug, self.module_label, self.app_label]
+        to_resolve = [self.slug, self.module_label, self.url_name]
         for i, v in enumerate(to_resolve):
             if isinstance(v, template.Variable):
                 to_resolve[i] = v.resolve(context)
@@ -73,16 +71,15 @@ class BaseHelpNode(template.Node):
 
 class HelpLinkNode(BaseHelpNode):
     
-    def obtain_help_link(self, context, slug="", module_label="", app_label=""):
+    def obtain_help_link(self, context, slug="", module_label="", url_name=""):
         help_obj = None
 
         if not slug:
             current_link = get_path_from_context(context)   
             help_obj = Help.objects.get_help_object_from_url(current_link)
         else:
-            slug, module_label, app_label = slug_those(slug, module_label, app_label)
-            help_obj = Help.objects.get_help_object(slug, module_label=module_label, 
-                                                    app_label=app_label)
+            slug, module_label, url_name = slug_those(slug, module_label, url_name)
+            help_obj = Help.objects.get_help_object(slug, module_label, url_name)
             
         help_link = ""
         if help_obj is not None:
@@ -96,7 +93,7 @@ def get_help_link(parser, token):
 
 register.tag(get_help_link)
 
-def render_help(context, slug="", module_label="", app_label=""):
+def render_help(context, slug="", module_label="", url_name=""):
     
     help_obj = None
     
@@ -104,9 +101,8 @@ def render_help(context, slug="", module_label="", app_label=""):
         current_link = get_path_from_context(context) 
         help_obj = Help.objects.get_help_object_from_url(current_link)
     else:
-        slug, module_label, app_label = slug_those(slug, module_label, app_label)
-        help_obj = Help.objects.get_help_object(slug, module_label=module_label, 
-                                                app_label=app_label)
+        slug, module_label, url_name = slug_those(slug, module_label, url_name)
+        help_obj = Help.objects.get_help_object(slug, module_label, url_name)
     
     return { 'object' : help_obj }
     

@@ -9,6 +9,9 @@ urlpatterns = patterns('',
     #(r'^example/', include('example.foo.urls')),
     (r'^help/', include('help.urls')),
     (r'^foo/', include('foo.urls')),
+
+    # How about explicit view
+    (r'^weird/', 'foo.views.weird'),
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),

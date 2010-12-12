@@ -2,15 +2,15 @@ from django.views.generic.list_detail import object_detail
 from help.models import Help
 
 def show_help(request, help_id=None, template_name=None, 
-              slug=None, module_label=None, app_label=None,
+              slug=None, module_label=None, url_name=None,
               **object_detail_kwargs):
     
     qs = Help.objects.all()
 
     if module_label:
         qs = qs.filter(module_label=module_label)
-    if app_label:
-        qs = qs.filter(app_label=app_label)
+    if url_name:
+        qs = qs.filter(url_name=url_name)
         
     if not template_name:
         template_name = "help/show_help.html"

@@ -1,7 +1,8 @@
 {% load help_tags %}
 
-{{ test }}
-
+<h3>{{ test }}</h3>
+<p>This is a template: "foo/test.html"</p>
+<p>Look at the foo/urls.py to compare usages with views, modules and url names</p> 
 <hr />
 
 <p>below should be the help link</p>
@@ -10,7 +11,7 @@
 <hr />
 
 {% get_help_link as var_help_link %}
-<p>below should be the help link</p>
+<p>below should be the help link with a variable</p>
 {% if var_help_link %}
 	<a href="{{ var_help_link }}">Get help!</a>
 {% endif %}
@@ -30,7 +31,7 @@
 {% endif %}
 <hr />
 
-{% get_help_link "test_view" "foo.views" "foo" as var_help_link4 %}
+{% get_help_link "test_view" "foo.views" "this_is_the_name" as var_help_link4 %}
 <p>below should be the help link 4</p>
 {% if var_help_link4 %}
 	<a href="{{ var_help_link4 }}">Get help!</a>
