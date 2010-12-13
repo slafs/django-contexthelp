@@ -10,6 +10,35 @@ from django.utils.translation import ugettext_lazy as _
 
 class HelpManager(models.Manager):
     
+    def _get_resolver(self):
+        return get_resolver(get_urlconf())
+    
+    def _handle_urlpattern(self, urlpatterns, already_patterns):
+        '''returns a (slug, module_label, url_name) from RegexURLPattern
+        takes an iterable of urlpatterns
+        This method flattens the urlpatterns
+        NOTE: probably this is too much overhead but i couldn't find 
+        any applicable method in Django
+        '''
+        for pat in urlpatterns:
+            if isinstance(pat, RegexURLPattern):
+                already_patterns.append(pat)
+            elif isinstance(pat, RegexURLResolver):
+                self._handle_urlpattern(pat.url_patterns, already_patterns)      
+            else:
+                pass
+        return already_patterns
+    
+    def url_patterns(self):
+        '''property that holds all url_patterns nicely flattened'''
+        if getattr(self, '_url_patterns', False):
+            return self._url_patterns
+        
+        resolver = self._get_resolver()
+        self._url_patterns = self._handle_urlpattern(resolver.url_patterns, [])
+        return self._url_patterns
+    
+    url_patterns = property( url_patterns )
     
     def create_default(self, slug=None, module_label=None, 
                            url_name=None, **kwargs):
@@ -21,37 +50,33 @@ class HelpManager(models.Manager):
         print 'probuje', slug, module_label, url_name
         return self.get_or_create(slug=slug, module_label=module_label, 
                            url_name=url_name, defaults=kwargs)
-    
-    def _get_resolver(self):
-        return get_resolver(get_urlconf())
-    
-    def _handle_urlpattern(self, urlpatterns, already_patterns):
-        '''returns a (slug, module_label, url_name) from RegexURLPattern
-        takes an iterable of urlpatterns
-        This method flattens the urlpatterns and fills out the _patterns attr
-        maybe this is useless but i couldn't find 
-        any applicable method in Django
-        '''
-        for pat in urlpatterns:
-            if isinstance(pat, RegexURLPattern):
-                already_patterns.append(pat)
-            elif isinstance(pat, RegexURLResolver):
-                self._handle_urlpattern(pat.url_patterns, already_patterns)      
-            else:
-                pass
-        return already_patterns
 
+    def _dumb_get_url_name(self, pattern):
+        '''this imitates the Django 1.3 functionality
+        and returns the url_name of a given pattern (tuple returned by `resolve`)
+        '''
+        f, args, kwargs = pattern
+        path = reverse(f, args=args, kwargs=kwargs)
+        if path.endswith('/'):
+            path = path[:-1] # not sure why I have to do this, but it works :)
+        for r in self.url_patterns:
+            result = r.resolve(path)
+            if result is not None:
+                return r.name
+        return ""
+        
     def _get_help_slugs_from_pattern(self, pattern):
+        '''TODO: make compatible with Django 1.3'''
         if type(pattern) == RegexURLPattern:
             f = pattern.callback
+            url_name =  getattr(pattern, "name", "") 
         else:
+            # pattern is a tuple ( len(pattern) == 3 )
             f = pattern[0]
-        slug = slugify( getattr(f, "__name__", "") )
-        module_label = slugify( getattr(f, "__module__", "") )
-        url_name = slugify( getattr(pattern, "url_name", "") )
-        if not url_name:
-            print 'nie ma url_name'
-            url_name = module_label + slug
+            url_name = self._dumb_get_url_name(pattern)
+            
+        slug =  getattr(f, "__name__", "") 
+        module_label =  getattr(f, "__module__", "") 
         return slug, module_label, url_name
 
     
@@ -64,26 +89,25 @@ class HelpManager(models.Manager):
             raise AttributeError("Only one tuple of 'only_for_apps' and 'exclude_apps' "
                                  "can be provided.")
             
-        resolver = self._get_resolver()
-        result = self._handle_urlpattern(resolver.url_patterns, [])
 
-        for pat in result:
+        for pat in self.url_patterns:
             slug, module_label, url_name, content = "", "", "", ""
             slug, module_label, url_name = self._get_help_slugs_from_pattern(pat)
-            print type(pat)
-            print dir(pat)
+            
             
             f = pat.callback            
             content = f.__doc__ 
             kwargs = {} 
             kwargs.update({ 'content' : content })
             
+            print slug, module_label, url_name
             self.create_default(slug, module_label, url_name, **kwargs)
     
     
     def _get_help_slugs_from_url(self, url):
         """returns a tuple (slug, module_label, url_name) for a given url (path)""" 
         #TODO: figure out how to get url_name from resolve
+        print 'URL', url
         slug = ""
         module_label = ""
         url_name = ""
@@ -153,8 +177,10 @@ class Help(models.Model):
     
     def save(self, *args, **kwargs):
         self.slug = slugify(self.slug)
-        self.module_label = slugify(self.module_label)
-        self.url_name = slugify(self.url_name)
+        if self.module_label is not None:
+            self.module_label = slugify(self.module_label)
+        if self.url_name is not None:
+            self.url_name = slugify(self.url_name)
         super(Help, self).save(*args, **kwargs)
     
     def get_absolute_url(self):
