@@ -7,7 +7,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Example:
     #(r'^example/', include('example.foo.urls')),
-    (r'^help/', include('help.urls')),
+    (r'^help/', include('contexthelp.urls')),
     (r'^foo/', include('foo.urls')),
 
     # How about explicit view
