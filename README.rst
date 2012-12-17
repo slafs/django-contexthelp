@@ -1,3 +1,5 @@
+This project is **suspended**. There's nothing to see here for now.
+
 django-contexthelp
 ===================
 
